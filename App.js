@@ -1,18 +1,22 @@
 import React, {useCallback} from 'react';
-import { StyleSheet, TextInput, View} from 'react-native';
+import {StyleSheet, Text, TextInput, View} from 'react-native';
 import { useState, useEffect } from 'react';
 import { getArticlesFromApi } from './src/api/api';
 import debounce from './src/components/helpers/debounce';
 
 import ArticleList from './src/components/articleList';
+import DateRangePicker from "rn-select-date-range";
+import moment from "moment";
 
 
-export default React.memo(function App() {
+export default function App() {
   const [articles, setArticles] = useState([]);
   const [inputText, setInputText] = React.useState('');
 
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [selectedRange, setRange] = useState({});
 
   const loadMoreArticles = () => {
     setPage(prev => prev + 1);
@@ -21,14 +25,18 @@ export default React.memo(function App() {
 
   useEffect(() => {
     async function response() {
-      setIsLoading(true);
-      const dataFromServer = await getArticlesFromApi(inputText, page);
+      try {
+        setIsLoading(true);
+        const dataFromServer = await getArticlesFromApi(inputText, page);
 
-      console.log('new request');
-      console.log(page);
+        console.log('new request');
+        console.log(page);
 
-      setArticles([...articles, ...dataFromServer.articles]);
-      setIsLoading(false);
+        setArticles([...articles, ...dataFromServer.articles]);
+        setIsLoading(false);
+      } catch {
+        alert('Can not load articles')
+      }
     }
 
     response();
@@ -45,6 +53,24 @@ export default React.memo(function App() {
         />
       </View>
 
+      <View>
+        <DateRangePicker
+          onSelectDateRange={(range) => {
+            setRange(range);
+          }}
+          blockSingleDateSelection={true}
+          responseFormat="YYYY-MM-DD"
+          maxDate={moment()}
+          minDate={moment().subtract(100, "days")}
+          selectedDateContainerStyle={styles.selectedDateContainerStyle}
+          selectedDateStyle={styles.selectedDateStyle}
+        />
+        <View style={styles.container}>
+          <Text>first date: {selectedRange.firstDate}</Text>
+          <Text>second date: {selectedRange.secondDate}</Text>
+        </View>
+      </View>
+
       <ArticleList
         articles={articles}
         isLoading={isLoading}
@@ -52,7 +78,7 @@ export default React.memo(function App() {
       />
     </View>
   );
-})
+}
 
 
 const styles = StyleSheet.create({

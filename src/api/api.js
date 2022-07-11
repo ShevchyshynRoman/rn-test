@@ -9,7 +9,9 @@ const apiKey4 = '&apiKey=52ec5619e8074eb8a9ed678a55b3e88a';
 const pageSize = '&pageSize=5';
 
 export const getArticlesFromApi = async (search, page) => {
-  const response = await fetch(URL+ `?q=restaurant ${search}` + apiKey4 + `&page=${page}` + pageSize);
+  const searchQuery = `?q=restaurant ${search}`
+
+  const response = await fetch(URL+ searchQuery + apiKey + `&page=${page}` + pageSize);
 
   return response.json();
 };
