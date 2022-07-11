@@ -1,5 +1,5 @@
 import React, {useCallback} from 'react';
-import {StyleSheet, Text, TextInput, View} from 'react-native';
+import {Button, StyleSheet, Text, TextInput, View} from 'react-native';
 import { useState, useEffect } from 'react';
 import { getArticlesFromApi } from './src/api/api';
 import debounce from './src/components/helpers/debounce';
@@ -17,6 +17,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [selectedRange, setRange] = useState({});
+  const [isOpenCalendar, setIsOpenCalendar] = useState(false);
 
   const loadMoreArticles = () => {
     setPage(prev => prev + 1);
@@ -44,38 +45,64 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <View>
-        <TextInput
-          style={styles.input}
-          placeholder='Search by word'
-          onChangeText={setInputText}
-          value={inputText}
-        />
-      </View>
-
-      <View>
-        <DateRangePicker
-          onSelectDateRange={(range) => {
-            setRange(range);
-          }}
-          blockSingleDateSelection={true}
-          responseFormat="YYYY-MM-DD"
-          maxDate={moment()}
-          minDate={moment().subtract(100, "days")}
-          selectedDateContainerStyle={styles.selectedDateContainerStyle}
-          selectedDateStyle={styles.selectedDateStyle}
-        />
-        <View style={styles.container}>
-          <Text>first date: {selectedRange.firstDate}</Text>
-          <Text>second date: {selectedRange.secondDate}</Text>
+      {!isOpenCalendar && (
+        <View>
+          <TextInput
+            style={styles.input}
+            placeholder='Search by word'
+            onChangeText={setInputText}
+            value={inputText}
+          />
         </View>
-      </View>
+      )}
 
-      <ArticleList
-        articles={articles}
-        isLoading={isLoading}
-        loadMoreArticles={loadMoreArticles}
-      />
+      {!isOpenCalendar && (
+        <View style={styles.chooseContainer}>
+          <Button
+            title='Choose period'
+            onPress={() => setIsOpenCalendar(true)}
+          />
+          {selectedRange.firstDate && (
+            <Text>first date: {selectedRange.firstDate}</Text>
+          )}
+          {selectedRange.secondDate && (
+            <Text>second date: {selectedRange.secondDate}</Text>
+          )}
+
+        </View>
+      )}
+
+      {isOpenCalendar && (
+        <View>
+          <DateRangePicker
+            onSelectDateRange={(range) => {
+              setRange(range);
+            }}
+            blockSingleDateSelection={true}
+            responseFormat="YYYY-MM-DD"
+            maxDate={moment()}
+            minDate={moment().subtract(100, "days")}
+            selectedDateContainerStyle={styles.selectedDateContainerStyle}
+            selectedDateStyle={styles.selectedDateStyle}
+          />
+          <View style={styles.container}>
+            <Text>first date: {selectedRange.firstDate}</Text>
+            <Text>second date: {selectedRange.secondDate}</Text>
+            <Button
+              title='Close calendar'
+              onPress={() => setIsOpenCalendar(false)}
+            />
+          </View>
+        </View>
+      )}
+
+      {!isOpenCalendar && (
+        <ArticleList
+          articles={articles}
+          isLoading={isLoading}
+          loadMoreArticles={loadMoreArticles}
+        />
+      )}
     </View>
   );
 }
@@ -93,4 +120,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
   },
+  chooseContainer: {
+    padding: 5,
+    marginBottom: 5
+  }
 })
