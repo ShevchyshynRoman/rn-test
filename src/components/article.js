@@ -3,7 +3,7 @@ import {Button, Image, Modal, StyleSheet, Text, View} from 'react-native';
 import ModalDetails from "./modal";
 
 
-export default function Article({
+export default React.memo(function Article({
   urlToImage,
   title,
   description,
@@ -40,7 +40,7 @@ export default function Article({
       />
     </View>
   );
-}
+})
 
 const styles = StyleSheet.create({
   articleContainer: {

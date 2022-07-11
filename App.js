@@ -1,12 +1,13 @@
-import React from 'react';
-import { StyleSheet, Text, TextInput, View} from 'react-native';
+import React, {useCallback} from 'react';
+import { StyleSheet, TextInput, View} from 'react-native';
 import { useState, useEffect } from 'react';
 import { getArticlesFromApi } from './src/api/api';
+import debounce from './src/components/helpers/debounce';
 
 import ArticleList from './src/components/articleList';
 
 
-export default function App() {
+export default React.memo(function App() {
   const [articles, setArticles] = useState([]);
   const [inputText, setInputText] = React.useState('');
 
@@ -14,40 +15,35 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const loadMoreArticles = () => {
-    console.log('loadMoreArticles')
-    setPage(prev => prev + 1)
+    setPage(prev => prev + 1);
+    console.log('loadMoreArticles');
   }
 
   useEffect(() => {
     async function response() {
-      setIsLoading(true)
-      const dataFromServer = await getArticlesFromApi(page);
+      setIsLoading(true);
+      const dataFromServer = await getArticlesFromApi(inputText, page);
+
+      console.log('new request');
+      console.log(page);
 
       setArticles([...articles, ...dataFromServer.articles]);
-      setIsLoading(false)
+      setIsLoading(false);
     }
 
-    async function onTextChange() {
-      setIsLoading(true)
-      const dataFromServer = await getArticlesFromApi(inputText);
-
-      setArticles(dataFromServer.articles);
-      setIsLoading(false)
-    }
-
-    onTextChange();
     response();
-
   }, [inputText, page]);
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder='Search by word'
-        onChangeText={setInputText}
-        value={inputText}
-      />
+      <View>
+        <TextInput
+          style={styles.input}
+          placeholder='Search by word'
+          onChangeText={setInputText}
+          value={inputText}
+        />
+      </View>
 
       <ArticleList
         articles={articles}
@@ -56,7 +52,8 @@ export default function App() {
       />
     </View>
   );
-}
+})
+
 
 const styles = StyleSheet.create({
   container: {
@@ -70,4 +67,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
   },
-});
+})

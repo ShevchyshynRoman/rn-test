@@ -40,5 +40,5 @@ export default React.memo(function ArticleList({
       </View>
     </View>
   );
-})
-
+}
+)
