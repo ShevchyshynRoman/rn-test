@@ -1,39 +1,33 @@
-import React, {useCallback} from 'react';
+import React, {
+  useState,
+  useEffect
+} from 'react';
+import moment from 'moment';
 import {Button, StyleSheet, Text, TextInput, View} from 'react-native';
-import { useState, useEffect } from 'react';
-import { getArticlesFromApi } from './src/api/api';
-import debounce from './src/components/helpers/debounce';
-
+import { getArticlesFromApi1 } from './src/api/api';
 import ArticleList from './src/components/articleList';
-import DateRangePicker from "rn-select-date-range";
-import moment from "moment";
+import DateRangePicker from 'rn-select-date-range';
+
 
 
 export default function App() {
   const [articles, setArticles] = useState([]);
   const [inputText, setInputText] = React.useState('');
 
-  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
   const [selectedRange, setRange] = useState({});
   const [isOpenCalendar, setIsOpenCalendar] = useState(false);
 
-  const loadMoreArticles = () => {
-    setPage(prev => prev + 1);
-    console.log('loadMoreArticles');
-  }
 
-  useEffect(() => {
+    useEffect(() => {
     async function response() {
       try {
         setIsLoading(true);
-        const dataFromServer = await getArticlesFromApi(inputText, page);
+        const dataFromServer = await getArticlesFromApi1(selectedRange.firstDate , selectedRange.secondDate);
 
-        console.log('new request');
-        console.log(page);
+        setArticles([...dataFromServer.articles]);
 
-        setArticles([...articles, ...dataFromServer.articles]);
         setIsLoading(false);
       } catch {
         alert('Can not load articles')
@@ -41,7 +35,24 @@ export default function App() {
     }
 
     response();
-  }, [inputText, page]);
+  }, [selectedRange.firstDate, selectedRange.secondDate]);
+
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalArticlesCount = articles.length;
+  const pages = totalArticlesCount / itemsPerPage;
+
+
+  const loadMoreArticles = () => {
+
+  }
+
+  const filteredArticles = articles.filter(article => (
+    article.title.toLowerCase().includes(inputText.toLowerCase())
+    || article.description.toLowerCase().includes(inputText.toLowerCase())
+    )
+  )
+
 
   return (
     <View style={styles.container}>
@@ -62,13 +73,6 @@ export default function App() {
             title='Choose period'
             onPress={() => setIsOpenCalendar(true)}
           />
-          {selectedRange.firstDate && (
-            <Text>first date: {selectedRange.firstDate}</Text>
-          )}
-          {selectedRange.secondDate && (
-            <Text>second date: {selectedRange.secondDate}</Text>
-          )}
-
         </View>
       )}
 
@@ -78,7 +82,7 @@ export default function App() {
             onSelectDateRange={(range) => {
               setRange(range);
             }}
-            blockSingleDateSelection={true}
+            blockSingleDateSelection={false}
             responseFormat="YYYY-MM-DD"
             maxDate={moment()}
             minDate={moment().subtract(100, "days")}
@@ -86,8 +90,7 @@ export default function App() {
             selectedDateStyle={styles.selectedDateStyle}
           />
           <View style={styles.container}>
-            <Text>first date: {selectedRange.firstDate}</Text>
-            <Text>second date: {selectedRange.secondDate}</Text>
+
             <Button
               title='Close calendar'
               onPress={() => setIsOpenCalendar(false)}
@@ -96,12 +99,12 @@ export default function App() {
         </View>
       )}
 
-      {!isOpenCalendar && (
-        <ArticleList
-          articles={articles}
-          isLoading={isLoading}
-          loadMoreArticles={loadMoreArticles}
-        />
+      {(!isOpenCalendar && articles.length > 0) && (
+         <ArticleList
+            articles={filteredArticles}
+            isLoading={isLoading}
+            loadMoreArticles={loadMoreArticles}
+          />
       )}
     </View>
   );
@@ -111,7 +114,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     marginTop: 50,
-    paddingBottom: 120,
+    paddingBottom: 250,
     padding: 5,
   },
   input: {
