@@ -12,3 +12,6 @@ React native application in which you can view a list of news about restaurants,
 * Run `npm install` in your terminal
 * Run `npm start`
 * Run on your iOS/Android emulator
+
+## Troubleshooting
+* If you don't have `npm install` working, use `npm install --force`
