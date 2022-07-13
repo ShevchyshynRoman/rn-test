@@ -9,9 +9,8 @@ import ArticleList from './src/components/articleList';
 import DateRangePicker from 'rn-select-date-range';
 
 
-
 export default function App() {
-  const [articles, setArticles] = useState([]);
+  const [articlesFromServer, setArticlesFromServer] = useState([]);
   const [inputText, setInputText] = React.useState('');
 
   const [isLoading, setIsLoading] = useState(false);
@@ -19,14 +18,13 @@ export default function App() {
   const [selectedRange, setRange] = useState({});
   const [isOpenCalendar, setIsOpenCalendar] = useState(false);
 
-
-    useEffect(() => {
+  useEffect(() => {
     async function response() {
       try {
         setIsLoading(true);
         const dataFromServer = await getArticlesFromApi1(selectedRange.firstDate , selectedRange.secondDate);
 
-        setArticles([...dataFromServer.articles]);
+        setArticlesFromServer([...dataFromServer.articles]);
 
         setIsLoading(false);
       } catch {
@@ -37,25 +35,35 @@ export default function App() {
     response();
   }, [selectedRange.firstDate, selectedRange.secondDate]);
 
-  const [page, setPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalArticlesCount = articles.length;
-  const pages = totalArticlesCount / itemsPerPage;
-
-
-  const loadMoreArticles = () => {
-
-  }
-
-  const filteredArticles = articles.filter(article => (
+  const filteredFromInputArticles = articlesFromServer.filter(article => (
     article.title.toLowerCase().includes(inputText.toLowerCase())
     || article.description.toLowerCase().includes(inputText.toLowerCase())
-    )
-  )
+  ))
 
+  const [page, setPage] = useState(1);
+  const articlesPerPage = 10;
+  const totalArticlesCount = filteredFromInputArticles.length;
+  const pages = Math.ceil(totalArticlesCount / articlesPerPage);
+
+  const loadMoreArticles = () => {
+    setPage(prevPage => {
+      setIsLoading(true);
+      if (page >= pages) {
+        return pages;
+      }
+      return prevPage + 1;
+    });
+    setIsLoading(false);
+  }
+
+  const startIndex = 0;
+  const endIndex = page * articlesPerPage;
+  const slicedForPagination = filteredFromInputArticles.slice(startIndex, endIndex);
+  const showArticles = [...slicedForPagination];
 
   return (
     <View style={styles.container}>
+    <View>
       {!isOpenCalendar && (
         <View>
           <TextInput
@@ -90,7 +98,6 @@ export default function App() {
             selectedDateStyle={styles.selectedDateStyle}
           />
           <View style={styles.container}>
-
             <Button
               title='Close calendar'
               onPress={() => setIsOpenCalendar(false)}
@@ -98,10 +105,10 @@ export default function App() {
           </View>
         </View>
       )}
-
-      {(!isOpenCalendar && articles.length > 0) && (
+    </View>
+      {(!isOpenCalendar && articlesFromServer.length > 0) && (
          <ArticleList
-            articles={filteredArticles}
+            articles={showArticles}
             isLoading={isLoading}
             loadMoreArticles={loadMoreArticles}
           />
