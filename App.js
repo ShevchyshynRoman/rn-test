@@ -2,14 +2,17 @@ import React, {
   useState,
   useEffect
 } from 'react';
-import moment from 'moment';
 import {Button, StyleSheet, Text, TextInput, View} from 'react-native';
 import { getArticlesFromApi1 } from './src/api/api';
-import ArticleList from './src/components/articleList';
+import moment from 'moment';
 import DateRangePicker from 'rn-select-date-range';
-
+import SelectDropdown from 'react-native-select-dropdown';
+import ArticleList from './src/components/articleList';
 
 export default function App() {
+  const [sortByValue, setSortByValue] = useState('publishedAt');
+  const selectSortBy = ['publishedAt', 'popularity', 'relevancy'];
+
   const [articlesFromServer, setArticlesFromServer] = useState([]);
   const [inputText, setInputText] = React.useState('');
 
@@ -22,7 +25,11 @@ export default function App() {
     async function response() {
       try {
         setIsLoading(true);
-        const dataFromServer = await getArticlesFromApi1(selectedRange.firstDate , selectedRange.secondDate);
+        const dataFromServer = await getArticlesFromApi1(
+          selectedRange.firstDate,
+          selectedRange.secondDate,
+          sortByValue
+        );
 
         setArticlesFromServer([...dataFromServer.articles]);
 
@@ -33,11 +40,15 @@ export default function App() {
     }
 
     response();
-  }, [selectedRange.firstDate, selectedRange.secondDate]);
+  }, [
+    selectedRange.firstDate,
+    selectedRange.secondDate,
+    sortByValue
+  ]);
 
   const filteredFromInputArticles = articlesFromServer.filter(article => (
-    article.title.toLowerCase().includes(inputText.toLowerCase())
-    || article.description.toLowerCase().includes(inputText.toLowerCase())
+    (article.title && article.title.toLowerCase().includes(inputText.toLowerCase()))
+    || (article.description && article.description.toLowerCase().includes(inputText.toLowerCase()))
   ))
 
   const [page, setPage] = useState(1);
@@ -60,6 +71,8 @@ export default function App() {
   const endIndex = page * articlesPerPage;
   const slicedForPagination = filteredFromInputArticles.slice(startIndex, endIndex);
   const showArticles = [...slicedForPagination];
+
+  console.log(sortByValue)
 
   return (
     <View style={styles.container}>
@@ -105,6 +118,25 @@ export default function App() {
           </View>
         </View>
       )}
+
+    <View style={styles.sortByContainer}>
+      <Text style={styles.sortByContainerTitle}>
+        Sort by:
+      </Text>
+      <SelectDropdown
+        data={selectSortBy}
+        onSelect={(selectedItem) => {
+          setSortByValue(selectedItem)
+        }}
+        buttonTextAfterSelection={(selectedItem) => {
+          return selectedItem
+        }}
+        rowTextForSelection={(item) => {
+          return item
+        }}
+      />
+    </View>
+
     </View>
       {(!isOpenCalendar && articlesFromServer.length > 0) && (
          <ArticleList
@@ -121,7 +153,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     marginTop: 50,
-    paddingBottom: 250,
+    paddingBottom: 350,
     padding: 5,
   },
   input: {
@@ -133,5 +165,15 @@ const styles = StyleSheet.create({
   chooseContainer: {
     padding: 5,
     marginBottom: 5
+  },
+  sortByContainer: {
+    paddingBottom: 10,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  sortByContainerTitle: {
+    fontSize: 20,
+    marginRight: 20
   }
 })
